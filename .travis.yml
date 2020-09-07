@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t cylordev/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true cylordev/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t cylordev/multi-client ./client
+  - docker build -t cylordev/multi-nginx ./nginx
+  - docker build -t cylordev/multi-server ./server
+  - docker build -t cylordev/multi-worker ./worker
+  - echo "$DOCKER_PW" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push cylordev/multi-client
+  - docker push cylordev/multi-nginx
+  - docker push cylordev/multi-server
+  - docker push cylordev/multi-worker
